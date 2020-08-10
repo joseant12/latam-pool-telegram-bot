@@ -38,7 +38,7 @@ CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
 Inline_board =  [[InlineKeyboardButton("\u26A0 BUSCA TU DIRECCION DE STAKE AQUI \u26A0", url='https://pooltool.io/pool/c922da2949ca73c3300326dc5f9dc4cb39cf6c855ab8256dffdb9289/delegators')]]
 markup2 = InlineKeyboardMarkup(Inline_board)
 reply_keyboard = [['Direccion de Stake', 'Direccion de Cardano'],
-                  ["Referente (Usuario de telegram)",'Nombre de usuario'],
+                  ["Referente",'Nombre de usuario'],
                   ['Hecho']]
 
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
@@ -104,7 +104,7 @@ def regular_choice(update, context):
     text = update.message.text
     context.user_data['choice'] = text
     update.message.reply_text(
-        'Por favor indica tu {} en la siguiente línea. No proporciones '.format(text.lower()))
+        'Por favor indica tu {} en la siguiente línea. No proporciones ninguna dirección privada. Para el referente utilizar el usuario de telegram'.format(text.lower()))
 
     return TYPING_REPLY
 
@@ -163,7 +163,7 @@ def main():
         entry_points=[CommandHandler('start', start)],
 
         states={
-            CHOOSING: [MessageHandler(Filters.regex('^(Direccion de Stake|Direccion de Cardano|Nombre de usuario|Referente (Usuario de telegram))$'),
+            CHOOSING: [MessageHandler(Filters.regex('^(Direccion de Stake|Direccion de Cardano|Nombre de usuario|Referente)$'),
                                       regular_choice)
                        ],
 
