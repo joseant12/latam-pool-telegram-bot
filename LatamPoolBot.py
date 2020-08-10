@@ -57,7 +57,7 @@ def write_file(data, file_name=_FILE_NAME):
 
 
 def update_user_information(current_data, username, info):
-    current_data[username] = info
+    current_data[str(username)] = info
     return current_data
 
 
@@ -70,10 +70,11 @@ def write_user_data(username, info):
 def insert_json(telegram_name, chat_id, info=None):
     user_info = {
         'chat_id': chat_id,
+        'username': telegram_name,
         'info': info,
         'updated_at': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
-    write_user_data(telegram_name, user_info)
+    write_user_data(chat_id, user_info)
 
 
 def facts_to_str(user_data):
@@ -117,10 +118,10 @@ def received_information(current_data):
         user_data[category] = text
         del user_data['choice']
 
-        current_data.update_data(user_data, user['username'])
+        current_data.update_data(user_data, user['id'])
 
         update.message.reply_text("Gracias, por favor verifica que los datos sean correctos"
-                                "{}Para guardar los datos presiona el botón hecho.".format(facts_to_str(current_data.get_user_info(user['username']))),
+                                "{}Para guardar los datos presiona el botón hecho.".format(facts_to_str(current_data.get_user_info(user['id']))),
                                 reply_markup=markup)
 
         return CHOOSING
@@ -140,11 +141,11 @@ def done(current_data):
                                 "Usuario de telegram: {} \n"
                                 "ID del chat: {} \n"
                                 "Hasta la proxima".format(
-                                    facts_to_str(current_data.get_user_info(user['username'])),
+                                    facts_to_str(current_data.get_user_info(user['id'])),
                                     user['username'],
                                     user['id']))
 
-        insert_json(user['username'], user['id'], current_data.get_user_info(user['username']))
+        insert_json(user['username'], user['id'], current_data.get_user_info(user['id']))
 
         user_data.clear()
         return ConversationHandler.END
