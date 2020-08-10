@@ -1,6 +1,7 @@
 import logging
 import webbrowser
 import json
+import datetime
 
 from telegram import *
 from telegram.ext import *
@@ -12,10 +13,12 @@ class UserData(object):
     def update_data(self, data, username):
         info = self._current_data.get(username, {}).get('info', {})
         info.update(data)
+        if 'Fecha de registro' not in info:
+            info['Fecha de registro'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         user_data = self._current_data.get(username, {})
         user_data.update({'info': info})
         self._current_data.update({username: user_data})
-        print(" Datos actualizados: ", self._current_data)
+        print("\n Datos actualizados: ", self._current_data)
 
     def get_data(self):
         return self._current_data
@@ -35,7 +38,7 @@ CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
 Inline_board =  [[InlineKeyboardButton("\u26A0 BUSCA TU DIRECCION DE STAKE AQUI \u26A0", url='https://pooltool.io/pool/c922da2949ca73c3300326dc5f9dc4cb39cf6c855ab8256dffdb9289/delegators')]]
 markup2 = InlineKeyboardMarkup(Inline_board)
 reply_keyboard = [['Direccion de Stake', 'Direccion de Cardano'],
-                  ["Referente",'Nombre de usuario'],
+                  ["Referente (Usuario de telegram)",'Nombre de usuario'],
                   ['Hecho']]
 
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
@@ -67,7 +70,8 @@ def write_user_data(username, info):
 def insert_json(telegram_name, chat_id, info=None):
     user_info = {
         'chat_id': chat_id,
-        'info': info
+        'info': info,
+        'updated_at': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     write_user_data(telegram_name, user_info)
 
@@ -84,8 +88,10 @@ def facts_to_str(user_data):
 def start(update, context):
     user = update.message.from_user
     update.message.reply_text(
-        "¡Hola! Bienvenido a Cardano Latam Pool, {}, "
-        "Para poder participar en recomensas por favor llena esta información".format (user['username']),
+        "¡Hola! Bienvenido a Cardano Latam Pool, {}. "
+        "Para poder participar en recomensas por favor llena esta información. "
+        "ADVERTENCIA: Nunca te pediremos tu dirección privada. "
+        "Si tienes dudas contactar a un administrador del grupo de telegram https://t.me/joinchat/NFPHBAvdIx162AoNnibCXg".format (user['username']),
        # reply_markup=InlineKeyboardMarkup(keyboard),
         reply_markup=markup)
     update.message.reply_text('Si no sabes tu dirección de stake verifica este link',
@@ -98,7 +104,7 @@ def regular_choice(update, context):
     text = update.message.text
     context.user_data['choice'] = text
     update.message.reply_text(
-        'Por favor indica tu {} en la siguiente línea'.format(text.lower()))
+        'Por favor indica tu {} en la siguiente línea. No proporciones '.format(text.lower()))
 
     return TYPING_REPLY
 
@@ -114,7 +120,7 @@ def received_information(current_data):
         current_data.update_data(user_data, user['username'])
 
         update.message.reply_text("Gracias, por favor verifica que los datos sean correctos"
-                                "{} Para guardar los datos presiona el botón hecho.".format(facts_to_str(current_data.get_user_info(user['username']))),
+                                "{}Para guardar los datos presiona el botón hecho.".format(facts_to_str(current_data.get_user_info(user['username']))),
                                 reply_markup=markup)
 
         return CHOOSING
@@ -157,7 +163,7 @@ def main():
         entry_points=[CommandHandler('start', start)],
 
         states={
-            CHOOSING: [MessageHandler(Filters.regex('^(Direccion de Stake|Direccion de Cardano|Nombre de usuario|Referente)$'),
+            CHOOSING: [MessageHandler(Filters.regex('^(Direccion de Stake|Direccion de Cardano|Nombre de usuario|Referente (Usuario de telegram))$'),
                                       regular_choice)
                        ],
 
